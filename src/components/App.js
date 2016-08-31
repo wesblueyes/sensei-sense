@@ -3,9 +3,14 @@ import '../styles/screen.sass'
 
 class App extends Component {
 
+  static propTypes = {
+    children: React.PropTypes.node
+  }
+
   render () {
     return <div>
-      <h1>Hello, World!</h1>
+      <h1>Sensei Sense</h1>
+      {this.props.children}
     </div>
   }
 }
