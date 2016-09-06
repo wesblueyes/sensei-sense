@@ -8,9 +8,16 @@ class App extends Component {
   }
 
   render () {
-    return <div>
-      <h1>Sensei Sense</h1>
-      {this.props.children}
+    return <div className='app'>
+      <header>
+        <h1>Sensei Sense</h1>
+      </header>
+      <main>
+        {this.props.children}
+      </main>
+      <footer>
+        Copyright &copy; 2016 Pickles of Awesome, All Rights Reserved.
+      </footer>
     </div>
   }
 }

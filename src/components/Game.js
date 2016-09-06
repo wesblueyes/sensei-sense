@@ -1,5 +1,5 @@
 import React from 'react'
 
 export default () => {
-  return <h1>Game</h1>
+  return <h2>Game</h2>
 }
