@@ -14,7 +14,7 @@ body
   @include font-smoothing(on)
   margin: 0
   font: $base-text-size / 1 $base-font-family
-  color: $beige
+  color: $brown
 
 html, body, #root, .app
   height: 100%
@@ -63,36 +63,59 @@ $sprite-size: 16vw
   flex-wrap: wrap
 
   .color
-    height: $sprite-size
-    width: $sprite-size
-    background-image: url('../images/color-sprites.svg')
-    background-repeat: no-repeat
-    background-size: $sprite-size*4 $sprite-size*2
-    animation-duration: 0.5s
-    animation-name: color-cycle
-    animation-iteration-count: infinite
-    animation-timing-function: step-end
+    animation-duration: 1s, 0.5s
+    animation-name: grow, idle
+    animation-iteration-count: 1, infinite
+    animation-timing-function: ease-out, step-end
 
-    &.green
-      filter: hue-rotate(0deg)
+.color
+  height: $sprite-size
+  width: $sprite-size
+  background-image: url('../images/color-sprites.svg')
+  background-repeat: no-repeat
+  background-size: $sprite-size*4 $sprite-size*2
+  animation: idle 0.5s infinite step-end
 
-    &.aqua
-      filter: hue-rotate(60deg) brightness(140%) saturate(60%)
+  &.green
+    filter: hue-rotate(0deg)
 
-    &.blueberry
-      filter: hue-rotate(120deg)
+  &.aqua
+    filter: hue-rotate(60deg) brightness(140%) saturate(60%)
 
-    &.fuschia
-      filter: hue-rotate(180deg)
+  &.blueberry
+    filter: hue-rotate(120deg)
 
-    &.fire
-      filter: hue-rotate(260deg) saturate(150%) brightness(70%) contrast(160%)
+  &.fuschia
+    filter: hue-rotate(180deg)
 
-    &.coal
-      filter: hue-rotate(320deg) saturate(20%) brightness(80%) contrast(150%)
+  &.fire
+    filter: hue-rotate(260deg) saturate(150%) brightness(70%) contrast(160%)
 
+  &.coal
+    filter: hue-rotate(320deg) saturate(20%) brightness(80%) contrast(150%)
 
-@keyframes color-cycle
+  &.dragging
+    animation: active 0.5s infinite step-end
+    pointer-events: none
+
+@keyframes grow
+  from
+    transform: scale(0)
+  to
+    transform: scale(1)
+
+@keyframes idle
+  0%
+    background-position-x: -$sprite-size
+    background-position-y: -$sprite-size
+  33%
+    background-position-x: -$sprite-size*2
+    background-position-y: -$sprite-size
+  66%
+    background-position-x: -$sprite-size*3
+    background-position-y: -$sprite-size
+
+@keyframes active
   0%
     background-position-x: 0
     background-position-y: 0
@@ -122,16 +145,35 @@ $sprite-size: 16vw
     display: flex
     flex-direction: row
 
-
   .cup, .pegs, .go
     width: 20vw
+
   .cup
+    position: relative
     height: 20vw
+    display: flex
+    align-content: center
+    justify-content: center
     background:
-      image: url('../images/bowl-front.svg'), url('../images/bowl-back.svg')
+      image: url('../images/bowl-back.svg')
       repeat: no-repeat
-      position: center 71%, center 40%
+      position: center
       size: 66%
+
+    .front
+      position: absolute
+      top: 0
+      right: 0
+      bottom: 0
+      left: 0
+      background:
+        image: url('../images/bowl-front.svg')
+        repeat: no-repeat
+        position: center
+        size: 66%
+
+    &.highlight
+      filter: brightness(120%)
 
   .pegs
 
@@ -146,6 +188,7 @@ $sprite-size: 16vw
     display: flex
     flex-direction: column
     justify-content: flex-end
+    overflow-y: auto
 
   .current
     background-color: $orange
@@ -154,3 +197,11 @@ $sprite-size: 16vw
   .color-well
     background-color: darken($orange, 10%)
     flex: 0 0 auto
+
+  .draggable
+    position: absolute
+    top: 0
+    left: 0
+
+    .color
+      animation-name: color-active
