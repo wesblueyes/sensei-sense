@@ -1,211 +1,87 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import cx from 'classnames'
+import Cup from './Cup'
+import Well from './Well'
+
+const CUPS = [0, 1, 2, 3]
 
 class Game extends React.Component {
+  constructor () {
+    super()
+    this.state = {
+      id: 0,
+      moves: [],
+      currentMove: []
+    }
+  }
+
+  componentDidMount () {
+    window.fetch(`https://sensei-sense-api.herokuapp.com/games?access_token=whitney`, {method: 'POST'})
+      .then((resp) => resp.json())
+      .then(json => this.setState({
+        id: json.id,
+        moves: json.moves
+      }))
+      .catch(err => console.log(err))
+    }
+
+    _getColor = (color, index) => {
+      this.state.currentMove[index] = color
+      this.setState({
+        currentMove: this.state.currentMove
+      })
+    }
+    _handleClick = () => {
+      window.fetchwindow.fetch(`https://sensei-sense-api.herokuapp.com/games/move?access_token=whitney&game_id=${this.state.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type' : 'application/json' },
+        body: JSON.stringify({
+          guess: this.state.currentMove
+        })
+      })
+
+      .then(resp => resp.json())
+      .then(json => this.setState({ moves: json.moves, currentMove: []}, () => {
+        let last = this.state.moves.length - 1
+        const matches = this.state.moves[last].result.filter((result) => result === 'exact_match')
+        if (matches.length === 4) {
+          window.alert('You Win')
+        }
+      }))
+    }
 
   render () {
     return <div className='game'>
       <div className='previous'>
-        <div className='turn'>
-          <Cup color='aqua' />
-          <Cup />
-          <Cup />
-          <Cup />
+        {this.state.moves.map((turn, i) => {
+          return <div className='turn'>
+          <Cup color={turn.guess[0]} />
+          <Cup color={turn.guess[1]} />
+          <Cup color={turn.guess[2]} />
+          <Cup color={turn.guess[3]} />
           <div className='pegs'>
-            TODO
+            {turn.result.map((result, k) => {
+              return <div className={result} key={k} />
+            })}
           </div>
         </div>
+      })}
       </div>
       <div className='current turn'>
-        <Cup droppable />
-        <Cup droppable />
-        <Cup droppable />
-        <Cup droppable />
-        <div className='go'>
-          <button>Go</button>
-        </div>
-      </div>
-      <div className='color-well'>
+      (CUPS.map((cup, i) => <Cup droppable index={i} passColor={this._getColor} key={i} color={this.state.currentMove[i]} />)}
+      <div className='go'>
+      <button onClick={this._handleClick}>Go</button>
         <Well color='green' />
         <Well color='aqua' />
         <Well color='fuschia' />
         <Well color='blueberry' />
         <Well color='fire' />
         <Well color='coal' />
+        </div>
       </div>
-    </div>
-  }
-}
-
+    }
+  )
 // TODO: Handling touch events (for mobile) is not implemented.
 // React doesn't have `touchenter` so this will likely require some refactoring...
-class Cup extends React.Component {
-
-  static propTypes = {
-    color: React.PropTypes.string,
-    droppable: React.PropTypes.bool
-  }
-
-  constructor (props) {
-    super(props)
-    this.state = {
-      color: this.props.color,
-      highlight: false
-    }
-  }
-
-  _handleDragEnter = (event) => {
-    this.setState({
-      highlight: true
-    })
-  }
-
-  _handleDragLeave = (event) => {
-    this.setState({
-      highlight: false
-    })
-  }
-
-  _handleDragOver = (event) => {
-    // Preventing the default is required to allow
-    // drop event to occur.
-    event.preventDefault()
-  }
-
-  _handleDrop = (event) => {
-    const color = event.dataTransfer.getData('text/plain')
-    this.setState({
-      highlight: false,
-      color: color
-    })
-  }
-
-  render () {
-    let color, front
-    if (this.state.color) {
-      color = <div className={cx('color', this.state.color)} />
-    }
-    if (this.props.droppable) {
-      front = <div
-        className='front'
-        onDragEnter={this._handleDragEnter}
-        onDragLeave={this._handleDragLeave}
-        onDragOver={this._handleDragOver}
-        onDrop={this._handleDrop}
-      />
-    } else {
-      front = <div className='front' />
-    }
-
-    return <div className={cx('cup', { highlight: this.state.highlight })}>
-      {color}
-      {front}
-    </div>
-  }
-}
-
-class Well extends React.Component {
-
-  static propTypes = {
-    color: React.PropTypes.string
-  }
-
-  constructor () {
-    super()
-    this.state = {
-      position: {
-        x: 0,
-        y: 0
-      },
-      origin: {
-        x: 0,
-        y: 0
-      }
-    }
-  }
-
-  _handleDragStart = (event) => {
-    const position = ReactDOM.findDOMNode(this.refs.orb).getBoundingClientRect()
-    if (event.dataTransfer) {
-      const dragImage = document.createElement('img')
-      const transparentPixel = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-      dragImage.src = transparentPixel
-      event.dataTransfer.setDragImage(dragImage, 0, 0)
-      event.dataTransfer.setData('text/plain', this.props.color)
-    }
-    this.setState({
-      dragging: true,
-      origin: {
-        x: position.left + (position.width / 2),
-        y: position.top + (position.height / 2)
-      }
-    })
-  }
-
-  _handleMouseDown = (event) => {
-    this.setState({
-      dragging: true
-    })
-  }
-
-  _handleMouseUp = (event) => {
-    this.setState({
-      dragging: false
-    })
-  }
-
-  _handleDrag = (event) => {
-    if (event.changedTouches) {
-      // Handle mobile touch drag
-      this.setState({
-        position: {
-          x: event.changedTouches[0].clientX - this.state.origin.x,
-          y: event.changedTouches[0].clientY - this.state.origin.y
-        }
-      })
-    } else {
-      // Handle regular drag
-      this.setState({
-        position: {
-          x: event.clientX - this.state.origin.x,
-          y: event.clientY - this.state.origin.y
-        }
-      })
-    }
-  }
-
-  _handleDragEnd = (event) => {
-    this.setState({
-      dragging: false,
-      position: {
-        x: 0,
-        y: 0
-      }
-    })
-  }
-
-  render () {
-    let classes = cx('color', this.props.color, { dragging: this.state.dragging })
-    return <div className='well'
-      draggable
-      onDragStart={this._handleDragStart}
-      onDragEnd={this._handleDragEnd}
-      onDrag={this._handleDrag}
-      onTouchStart={this._handleDragStart}
-      onTouchEnd={this._handleDragEnd}
-      onTouchMove={this._handleDrag}
-      onMouseDown={this._handleMouseDown}
-      onMouseUp={this._handleMouseUp} >
-      <div ref='orb'
-        className={classes}
-        style={{
-          left: this.state.position.x,
-          top: this.state.position.y,
-          position: 'relative'
-        }} />
-    </div>
-  }
-}
-
 export default Game
